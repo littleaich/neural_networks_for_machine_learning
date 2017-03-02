@@ -1,1 +1,1 @@
-# neural_networks_for_machine_learning
+This is the repository for Neural Networks for Machine Learning course.

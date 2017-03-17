@@ -1,5 +1,11 @@
 \documentclass{article}
 
+<<<<<<< HEAD
+\usepackage{graphicx}
+\usepackage{multicol} % for 2 column writing inside pages
+
+=======
+>>>>>>> d326e009a343bd58c4c85c31d2263533f688777b
 \title{Neural Network for Machine Learning - Geoffrey Hinton}
 \date{}
 \author{}
@@ -41,7 +47,11 @@ There is another way to think about dropout which is originally how Geoffrey Hin
 Let us discuss about 2 ways of producing models of data in particular binary vectors. The most natural way to think about generating a binary vector is first to generate the states of some latent variables and then use these latent variables to generate the binary vector. So in a causal model, we use 2 sequential steps. We first pick the states of the hidden units from their prior distributions. Often in the causal model, these will be independent in the prior. So their probability of turning on, if they are binary latent variables, would just depend on some bias that each one of them has. Then we pick the visible states from their conditional distribution given the hidden states. The probability of generating a visible vector, $\mathbf{v}$, is computed by summing over all possible hidden states. Each hidden state is an explanation of $\mathbf{v}$. 
 
 \begin{equation}
+<<<<<<< HEAD
+p(\mathbf{v}) = \sum_{\mathbf{h}} p(\mathbf{h})p(\mathbf{v|h})
+=======
 p(\mathbf{v}) = \sum_{h} p(\mathbf{h})p(\mathbf{v|h})
+>>>>>>> d326e009a343bd58c4c85c31d2263533f688777b
 \label{eq:causal_model}
 \end{equation}   
 
@@ -78,12 +88,78 @@ Physicists often call the normalizer the partition function. Notice that it has 
 \begin{equation}
 p(\mathbf{v}) = \
 \frac{\sum_{\mathbf{h}}\exp(-E(\mathbf{v,h}))} {\sum_{\mathbf{u,g}}\exp(-E(\mathbf{u,g}))}
+<<<<<<< HEAD
+\label{eq:bm_prob_vis}
+=======
 \label{eq:boltzmann_machine_equal_vis}
+>>>>>>> d326e009a343bd58c4c85c31d2263533f688777b
 \end{equation} 
 
 In reality, we cannot compute the normalizing term or the partition function for a network with more than a few hidden units, because it will have exponentially many terms. So, we use Markov Chain Monte Carlo to get samples from the model starting from a random global configuration with probability proportional the exponential of the negative energy of that joint configuration as in equation \ref{eq:boltzmann_machine}.
 
 \subsection{Restricted Boltzmann Machine}
+<<<<<<< HEAD
+In the previous subsection, we show that how Boltzmann Machine (BM) can be used as a probabilistic model of a set of binary data vectors. Now we are going to get around the learning algorithm of BM. This algorithm is theoretically well-justified, but too slow and noisy to be used in practice. However, recently Hinton devised several ways to greatly speed up the algorithm. Now it is much more practical and even been used as part of the winning entry of a million dollar machine learning competition. 
 
+The BM learning algorithm is an unsupervised learning algorithm. What it means is that unlike the backpropagation algorithm, where we provide a set of input data with associated target labels to train, in BM, we provide only the input data without any labels. The input data vectors earn the labels through the algorithm. The learning algorithm builds a model of a set of input vectors.
+
+The goal of learning is to maximize the product of probabilities that BM assigns to the binary vectors in the training set, which is equivalent to maximizing the sum of the \textit{log} probabilities. It is also equivalent to maximizing the probability that we would obtain exactly the $N$ training cases if we did the following.
+
+\begin{itemize}
+	\item Let the network settle to its stationary distribution $N$ different times with no external input.
+	\item Sample the visible vector once each time.
+\end{itemize}
+
+What is exactly being learned is the set of parameters that define a distribution over the visible vectors.
+
+Now, from equation \ref{eq:bm_prob_vis}, we can derive the following equations. It might seem a little bit confusing, but I am going to describe them both mathematically and intuitively.
+
+\begin{equation}
+\frac{\partial \log p(\mathbf{v})}{\partial w_{ij}} = \langle s_i s_j \rangle_\mathbf{v} -  \langle s_i s_j \rangle_{model}
+\label{eq:dlog_bm_prob}
+\end{equation}
+
+\begin{equation}
+\Delta w_{ij} \propto \langle s_i s_j \rangle_{data} -  \langle s_i s_j \rangle_{model}
+\label{eq:dweight_prop}
+\end{equation}
+
+In equation \ref{eq:dlog_bm_prob}, the term on LHS is the derivative of log probability of the training vector $\mathbf{v}$ under the model. The first term on RHS is the expected value of product of states at thermal equilibrium when $\mathbf{v}$ is clamped on the visible units. The second term is the expected value of product of states at thermal equilibrium with no clamping. This derivative is so simple because the probability of a global configuration at thermal equilibrium is an exponential function of its energy. So, setting to equilibrium makes the log probability a linear function of the energy. A significant difference between backpropagation and BM learning is that in BM, the process of setting to thermal equilibrium propagates information about the weights and so, we do not need to back propagate the derivatives. 
+
+Let us take a look at equations \ref{eq:dlog_bm_prob} and \ref{eq:dweight_prop} from another perspective. We call the first and second terms on RHS as positive and negative phases, respectively. Now, from equation \ref{eq:bm_prob_vis} , we can say that the positive phase finds hidden configurations that work well with $\mathbf{v}$ and lowers their energies. On the other hand, the negative phase finds the joint configurations that are the best competitors to the positive ones and raises their energies.
+
+Now in order to learn this learning rule, we need to collect these positive and negative statistics. The positive statistics are the ones when you have data clamped on the visible units, and the negative statistics are the ones when we do not have data clamped and that we are going to use for unlearning (Hopfield nets). An inefficient way of collecting these statistics was proposed by Hinton and Sejnowski in 1983. The idea is summarized below. 
+
+
+\begin{center}
+\textbf{An Inefficient Way of Collecting the Statistics for BM Learning} \newline
+\textbf{Hinton and Sejnowski (1983)}
+\end{center}
+\begin{multicols}{2}
+\begin{center}
+\textbf{Positive Phase}
+\end{center}
+\begin{itemize}
+	\item Clamp a data vector on the visible units and set the hidden units to random binary states.
+	\item Update the hidden units one at a time until the network reaches thermal equilibrium at a temperature of 1.
+	\item Sample $\langle s_i s_j \rangle$ for every connected pair of units.
+	\item Repeat for all data vectors in the training set and average.
+\end{itemize}
+\columnbreak
+\begin{center}
+\textbf{Negative Phase}
+\end{center}
+\begin{itemize}
+	\item Set all the units to random binary states.
+	\item Update all the units one at a time until the network reaches thermal equilibrium at a temperature of 1.
+	\item Sample $\langle s_i s_j \rangle$ for every connected pair of units.
+	\item Repeat many times (how many?!) and average to get good estimates.
+\end{itemize}
+\end{multicols}
+
+As stated in the last step of the negative phase, we have to repeat many times and then average to get a reasonable estimate. It is very difficult to know how many times we need to repeat because certainly in the negative phase, the energy landscape contains many local minima, which are fairly separated and have about the same energy. As an example, if we use BM to model a set of images, we expect there to be reasonable images, all of which have about the same energy as well as unreasonable images with very high energy contents. And, a large fraction of the image space belongs to the bad energy states. Also, if multiple modes are present, it is very unclear how many times we need to repeat the process to be able to sample those modes.
+=======
+
+>>>>>>> d326e009a343bd58c4c85c31d2263533f688777b
 
 \end{document}
